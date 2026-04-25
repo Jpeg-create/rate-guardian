@@ -1,16 +1,8 @@
-"""
-Integration tests — run against a real Redis instance, no mocking.
-
-With Docker:  docker compose up --abort-on-container-exit
-Locally:      redis-server & then pytest tests/ -v
-"""
-
+import time
 import pytest
 import redis.asyncio as aioredis
 
 from rate_guardian import RateGuardian, RateLimitExceeded
-
-# redis_client and limiter fixtures are defined in conftest.py
 
 
 async def test_first_request_allowed(limiter):
@@ -71,31 +63,24 @@ async def test_check_returns_headers_when_allowed(limiter):
 
 async def test_reset_header_is_unix_timestamp(limiter):
     """X-RateLimit-Reset must be a Unix epoch timestamp, not the window duration."""
-    import time
-
     await limiter.reset("ts_check")
     _, headers = await limiter.is_allowed("ts_check", limit=5, window=60)
 
     reset_val = int(headers["X-RateLimit-Reset"])
     now = int(time.time())
 
-    # Should be roughly now + window (within a 5-second tolerance)
     assert now < reset_val <= now + 65, (
         f"X-RateLimit-Reset ({reset_val}) should be a Unix timestamp near {now + 60}"
     )
 
 
 async def test_blocked_requests_not_written_to_redis(limiter, redis_client):
-    """
-    Blocked requests must NOT be added to the sorted set.
-    If they were, the cardinality would keep growing past the limit.
-    """
+    """Blocked requests must NOT be added to the sorted set."""
     await limiter.reset("no_write")
 
     for _ in range(3):
         await limiter.is_allowed("no_write", limit=3, window=60)
 
-    # These are all blocked — they should not be recorded
     for _ in range(5):
         await limiter.is_allowed("no_write", limit=3, window=60)
 
@@ -115,7 +100,6 @@ async def test_keys_are_isolated(limiter):
     allowed_a, _ = await limiter.is_allowed("key_a", limit=2, window=60)
     assert allowed_a is False
 
-    # key_b has its own counter — should be unaffected
     allowed_b, _ = await limiter.is_allowed("key_b", limit=2, window=60)
     assert allowed_b is True
 
@@ -148,7 +132,6 @@ async def test_prefix_isolates_keys(redis_client):
     allowed_a, _ = await limiter_a.is_allowed("shared", limit=2, window=60)
     assert allowed_a is False
 
-    # different prefix = different key in Redis = completely separate counter
     allowed_b, _ = await limiter_b.is_allowed("shared", limit=2, window=60)
     assert allowed_b is True
 

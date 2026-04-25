@@ -1,14 +1,3 @@
-"""
-Shared pytest fixtures for RateGuardian tests.
-
-pytest-asyncio is configured in pyproject.toml:
-  [tool.pytest.ini_options]
-  asyncio_mode = "auto"
-
-All async test functions and fixtures are picked up automatically —
-no @pytest.mark.asyncio needed.
-"""
-
 import os
 import pytest
 import redis.asyncio as aioredis

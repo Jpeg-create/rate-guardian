@@ -6,10 +6,7 @@ from .limiter import RateGuardian
 
 
 def rate_limit(limiter: RateGuardian, limit: int, window: int):
-    """
-    Per-route rate limiting decorator.
-    Keys by function name + client IP so each route has its own bucket.
-    """
+    """Per-route rate limiting. Keys by function name + client IP."""
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):

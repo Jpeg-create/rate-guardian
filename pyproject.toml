@@ -42,7 +42,7 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/Jpeg-create/rate-guardian"
 Repository = "https://github.com/Jpeg-create/rate-guardian"
-Issues = "https://github.com/Jpeg-create/rate_-uardian/issues"
+
 
 [tool.setuptools.packages.find]
 where = ["."]
